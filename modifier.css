@@ -1,0 +1,28 @@
+html{
+    background-color: gray;
+}
+
+input{
+    background-color: white;
+    padding: 0px 0px 10px 60px;
+    font-size: 20px;
+}
+#actionInput{
+    text-align: center;
+    padding: 0px 0px 0px 10px;
+}
+body{
+    background-color: gainsboro;
+    height: 980px; width: 400px;
+    border: thick;
+    border-color: whitesmoke;
+    border-style:solid;
+    margin: -10px 0px 0px 10px;
+}
+
+div{
+    text-align: start;
+    margin-left: 5px;
+    margin-top: 300px;
+    font-size: 20px;
+}
