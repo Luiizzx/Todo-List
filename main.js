@@ -1,3 +1,24 @@
+function validateInput(firstDate, secondDate, inputField, regexValue){
+    /**firstDate is current date, second date is an object that represents user input date 
+     * inputField has the input value that will be compared with regexValue
+     * just so before creating secondDate, at least the format matches
+     * which leaves us to compare only if the date is valid (if it's at least equal to current) 
+    */
+
+    const boolValue = regexValue.test(inputField.value);
+
+    if(boolValue){
+        const concatDate = inputValue[2] + "-" + inputValue[1] + "-" + inputValue[0];
+        secondDate = new Date(concatDate);
+        if(secondDate < firstDate){
+            alert("Invalid date. Start date must be at least equal to current date.");
+        }
+    }
+    else{
+        alert("Wrong date format.");
+    }
+    
+}
 /**
     *@type HTMLInputElement
     */
@@ -7,49 +28,27 @@
     *@type HTMLInputElement 
     */
     let taskStart = document.getElementById("taskStart");
-
 /**
     * @type HTMLInputElement
     */
     let taskEnd = document.getElementById("taskEnd");
+    const mainButton = document.getElementById("actionButton");
 
-    let titleContent = "";
+    let titleContent;
     let inputDate;
     let concatDate;
-
+    let userStartDate;
+    let userEndDate;
     const currentDate = new Date();
 
-    const mainButton = document.getElementById("actionButton");
+    const myRegex = new RegExp("\\d\\d\/\\d\\d\/\\d\\d\\d\\d");
     
     mainButton.addEventListener("click", function(){
         titleContent = taskTitle.value;
-        inputDate = taskStart.value.split("/");
-        
-        console.log(inputDate);
 
-        if(inputDate === ''){
-            alert("Task start date can't be empty.");
-        }
-        else if(inputDate[0] === '' || inputDate[1] === '' || inputDate[2] === ''){
-            alert("Invalid start date.");
-        }
-        else{
-            concatDate = inputDate[2] + "-" +  inputDate[1] + "-" + inputDate[0];
-        }
+        validateInput(currentDate, userStartDate, taskStart, myRegex);
 
-        const startUserDate = new Date(concatDate);
         let endUserData; /** esse campo é opcional, por essa razão pode permancer vazio */
-
-        if(taskEnd.value === ""){
-            endUserData = "";
-            alert("Task created with no end date.");
-        }
-        else{
-            inputDate = taskEnd.value.split("/");
-            concatDate = inputDate[2] + "-" + inputDate[1] + "-" + inputDate[0];
-            endUserData = new Date(concatDate);
-        }
-        console.log(startUserDate.getFullYear());
-        console.log(endUserData.getFullYear());
+        /** nesse caso, a função validateInput é chamada somente se ele não for vazio */
 
     });
