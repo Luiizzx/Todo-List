@@ -1,93 +1,102 @@
-class Task{
-    Task(t_Title, t_Start, t_End){
-        this.t_Title = t_Title;
-        this.t_Start = t_Start;
-        this.t_End = t_End;
-    }
-}
-function validateTitle(myTitle){
-    const titleContent = myTitle.value;
+/** Global task array */
+const taskArray = [];
 
-    if(titleContent === ''){
-        alert("Title must not be empty.");
+/** Date validation regex (dd/mm/yyyy)*/
+const dateValidationRegex = new RegExp("\\d\\d\/\\d\\d\/\\d\\d\\d\\d");
+
+function validateTitle(taskTitle) {
+    if (taskTitle === '') {
+        alert("Titulo nao pode ser vazio.");
         return false;
     }
-    else if(titleContent.length > 10){
-        alert("Title must have less than 10 chars.");
+
+    if (taskTitle.length > 10) {
+        alert("Titulo deve ter no maximo 10 caracteres.");
         return false;
     }
-    else{
+
+    return true;
+}
+
+function validateInput(currentDate, taskEndDate, regexValue) {
+    if (taskEndDate === '') {
+        alert("Task sem data final.")
         return true;
     }
-}
-function validateInput(firstDate, secondDate, inputField, regexValue){
-    /**firstDate is current date, second date is an object that represents user input date 
-     * inputField has the input value that will be compared with regexValue
-     * just so before creating secondDate, at least the format matches
-     * which leaves us to compare only if the date is valid (if it's at least equal to current) 
-    */
 
-    const boolValue = regexValue.test(inputField.value);
-
-    if(boolValue){
-        const inputArr = inputField.value.split("/");
-        const concatDate = inputArr[2] + "-" + inputArr[1] + "-" + inputArr[0];
-        /**tratamento de erro para dia > 31 e mes > 12 faltando */
-        secondDate = new Date(concatDate);
-
-        if(secondDate < firstDate){
-            alert("Invalid date. Start date must be at least equal to current date.");
-            return false;
-        }
-        return true;
-    }
-    else{
-        alert("Wrong date format.");
+    const dateFormatIsValid = regexValue.test(taskEndDate);
+    if (!dateFormatIsValid) {
+        alert("Erro no formato da data.");
         return false;
     }
-}
-/**
-    *@type HTMLInputElement
-    */
-    const taskTitle = document.getElementById("taskTitle");
 
-/**
-    *@type HTMLInputElement 
-    */
-    const taskStart = document.getElementById("taskStart");
-/**
+    const inputArr = taskEndDate.split("/");
+    const concatDate = inputArr[2] + "-" + inputArr[1] + "-" + inputArr[0];
+
+    var formattedDate = new Date(concatDate);
+
+    if (formattedDate < currentDate) {
+        alert("Data inválida: data final deve ser após a inicial.");
+        return false;
+    }
+
+    return true;
+}
+
+function mainButtonClick(taskTitle, taskDateEnd) {
+    const currentDate = new Date();
+    const formattedMonth = currentDate.getUTCMonth() + 1;
+    currentDate.setUTCMonth(formattedMonth);
+
+    console.log(currentDate.getUTCDate());
+    console.log(currentDate.getUTCMonth());
+    console.log(currentDate.getFullYear());
+
+    /**valor booleano que verifica se o título é válido */
+    const titleIsValid = validateTitle(taskTitle);
+    if (!titleIsValid) {
+        return;
+    }
+
+    /**valor booleano que verifica se a data final é válida  */
+    const dateIsValid = validateInput(currentDate, taskDateEnd, dateValidationRegex);
+    if (!dateIsValid) {
+        return;
+    }
+
+    // TODO create task
+    const newTask = new Task(taskTitle, formattedCurrentDate, taskDateEnd);
+
+    // TODO add task to array
+    taskArray[taskArray.length] = newTask;
+
+    let list = document.getElementById("my-list");
+    let dt = document.createElement("dt");
+    let dd = document.createElement("dd");
+
+    dt.innerText = newTask.objTitle;
+    dd.innerText = "Inicio:" + newTask.objStartDate + " | " + "Fim:" + newTask.objEndDate;
+    list.appendChild(dt);
+    list.appendChild(dd);
+}
+
+window.onload = () => {
+    /**
     * @type HTMLInputElement
     */
-    const taskEnd = document.getElementById("taskEnd");
+    const taskTitle = document.getElementById("task-title");
 
-    const mainButton = document.getElementById("actionButton");
-    let userStartDate;
-    let userEndDate;
-    
-    const currentDate = new Date();
-    const myRegex = new RegExp("\\d\\d\/\\d\\d\/\\d\\d\\d\\d");
-    
-    mainButton.addEventListener("click", function(){
-        const titleBool = validateTitle(taskTitle);
-        const startBool = validateInput(currentDate, userStartDate, taskStart, myRegex);
-        console.log(taskTitle.value);
-        let userTask;
-        let endBool;
+    /**
+    * @type HTMLInputElement
+    */
+    const taskDateEnd = document.getElementById("task-end");
 
-        if(taskEnd.value === '' && titleBool && startBool){ 
-            /** Mensagem personalizada que só aparece se mesmo com os outros campos válidos
-            * o usuário optar por não usar data final*/
-            alert("Task created with no end date.");         
-        }
-        else if(taskEnd.value !== ''){
-            /**Note que caso a data for vazia mas os outros campos não estejam válido
-            * nada é informado. Essa foi uma escolha para não exibir repetidamente
-            * que não há data final.*/
-            endBool = validateInput(currentDate, userEndDate, taskStart, myRegex);
-        }
+    /**
+    * @type HTMLButtonElement
+    */
+    const mainButton = document.getElementById("action-button");
 
-        if(endBool && startBool && titleBool){
-            userTask = new Task(taskTitle.value, taskStart.value, taskEnd.value);
-            console.log(userTask.t_Title);
-        }
+    mainButton.addEventListener("click", function (event) {
+        mainButtonClick(taskTitle.value, taskDateEnd.value);
     });
+}
