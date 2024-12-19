@@ -2,7 +2,49 @@
 const taskArray = [];
 
 /** Date validation regex (dd/mm/yyyy)*/
-const dateValidationRegex = new RegExp("\\d\\d\/\\d\\d\/\\d\\d\\d\\d");
+const dateValidationRegex = new RegExp("^\\d\\d\/\\d\\d\/\\d\\d\\d\\d$");
+
+function fixTaskArray(taskArray) {
+    let i;
+
+    while (i < taskArray.length) {
+        if (taskArray[i] == null) {
+            i++;
+        }
+        else {
+            let j = i;
+            while (taskArray[j] == null && j > 0) {
+                j--;
+                if (j == 0) {
+                    taskArray[0] = taskArray[i];
+                }
+                else if (taskArray[j] != null) {
+                    taskArray[j + 1] = taskArray[i];
+                }
+            }
+        }
+    }
+
+}
+
+function delButtonCreator(taskIdConstructor) {
+    let createdButton = document.createElement("button");
+    createdButton.setAttribute("type", "button");
+    createdButton.setAttribute("for", taskIdConstructor);
+    createdButton.setAttribute("id", "del-task-button");
+    createdButton.innerText = "Delete";
+
+    return createdButton;
+}
+
+function taskCheckboxCreator(taskIdConstructor) {
+    let createdBox = document.createElement("input");
+    createdBox.setAttribute("type", "checkbox");
+    createdBox.setAttribute("for", taskIdConstructor);
+    createdBox.setAttribute("id", "task-check");
+
+    return createdBox;
+}
 
 function validateTitle(taskTitle) {
     if (taskTitle === '') {
@@ -10,8 +52,8 @@ function validateTitle(taskTitle) {
         return false;
     }
 
-    if (taskTitle.length > 10) {
-        alert("Titulo deve ter no maximo 10 caracteres.");
+    if (taskTitle.length > 20) {
+        alert("Titulo deve ter no maximo 20 caracteres.");
         return false;
     }
 
@@ -31,26 +73,57 @@ function validateInput(currentDate, taskEndDate, regexValue) {
     }
 
     const inputArr = taskEndDate.split("/");
-    const concatDate = inputArr[2] + "-" + inputArr[1] + "-" + inputArr[0];
+    const concatDate = inputArr[2] + "-" + (inputArr[1]) + "-" + inputArr[0];
 
     var formattedDate = new Date(concatDate);
 
-    if (formattedDate < currentDate) {
-        alert("Data inválida: data final deve ser após a inicial.");
+    /**casos em que data está fora do intervalo, ex: dia > 31*/
+    if (isNaN(formattedDate.getDate()) || isNaN(formattedDate.getMonth()) || isNaN(formattedDate.getFullYear())) {
+        alert("Data invalida.");
         return false;
     }
 
+    if (formattedDate < currentDate) {
+        alert("Data invalida: data final deve ser apos a inicial.");
+        return false;
+    }
+
+    alert("Task criada com sucesso.")
     return true;
 }
 
-function mainButtonClick(taskTitle, taskDateEnd) {
-    const currentDate = new Date();
-    const formattedMonth = currentDate.getUTCMonth() + 1;
-    currentDate.setUTCMonth(formattedMonth);
+function setTaskContent(innerContent, argTitle, argFormattedCDate, argEDate, idConstructor) {
+    innerContent.setAttribute("id", idConstructor);
+    if (argEDate === '') {
+        innerContent.innerText = "Titulo: " + argTitle + " | " + "Inicio: " + argFormattedCDate + "|";
+    }
+    else {
+        innerContent.innerText = "Titulo: " + argTitle + " | " + "Inicio: " + argFormattedCDate + " | " + "Fim: " + argEDate;;
+    }
+}
 
-    console.log(currentDate.getUTCDate());
-    console.log(currentDate.getUTCMonth());
-    console.log(currentDate.getFullYear());
+function delTaskButtonClick(clickedButton, taskArray, myTaskList) {
+    const deletableId = clickedButton.getAttribute("for");
+
+    for (i = 0; i < taskArray.length; i++) {
+
+        if (deletableId === taskArray[i].getTaskId()) {
+            if (!taskArray[i].getTaskState()) {
+                alert("Task nao marcada como concluida. Deseja deletar mesmo assim?");
+                return;
+            }
+
+            const deletableTask = document.getElementById(deletableId);
+            myTaskList.removeChild(deletableTask);
+
+            return;
+        }
+    }
+}
+
+function addTaskButtonClick(taskTitle, taskDateEnd, myTaskList) {
+    const currentDate = new Date();
+    const formattedCurrentDate = currentDate.getDate() + "/" + (currentDate.getUTCMonth() + 1) + "/" + currentDate.getFullYear();
 
     /**valor booleano que verifica se o título é válido */
     const titleIsValid = validateTitle(taskTitle);
@@ -60,7 +133,7 @@ function mainButtonClick(taskTitle, taskDateEnd) {
 
     /**valor booleano que verifica se a data final é válida  */
     const dateIsValid = validateInput(currentDate, taskDateEnd, dateValidationRegex);
-    if (!dateIsValid) {
+    if (dateIsValid == false) {
         return;
     }
 
@@ -69,15 +142,46 @@ function mainButtonClick(taskTitle, taskDateEnd) {
 
     // TODO add task to array
     taskArray[taskArray.length] = newTask;
+    const taskIdConstructor = "TASK#" + taskArray.length;
 
-    let list = document.getElementById("my-list");
-    let dt = document.createElement("dt");
-    let dd = document.createElement("dd");
+    newTask.setTaskId(taskIdConstructor);
 
-    dt.innerText = newTask.objTitle;
-    dd.innerText = "Inicio:" + newTask.objStartDate + " | " + "Fim:" + newTask.objEndDate;
-    list.appendChild(dt);
-    list.appendChild(dd);
+    let myTaskContent = document.createElement("li");
+    setTaskContent(myTaskContent, taskTitle, formattedCurrentDate, taskDateEnd, taskIdConstructor);
+
+    const delTaskButton = delButtonCreator(taskIdConstructor);
+    const taskCheckbox = taskCheckboxCreator(taskIdConstructor);
+
+    myTaskContent.appendChild(delTaskButton);
+    myTaskContent.appendChild(taskCheckbox);
+    myTaskList.appendChild(myTaskContent);
+
+    delTaskButton.addEventListener("click", function (event) {
+        const clickedButton = delTaskButton;
+        delTaskButtonClick(clickedButton, taskArray, myTaskList, myTaskContent);
+    })
+
+    taskCheckbox.addEventListener("click", function (event) {
+
+        const linkedTask = document.getElementById(taskCheckbox.getAttribute("for"));
+        let objectTask;
+
+        for (i = 0; i < taskArray.length; i++) {
+            if (linkedTask === taskArray[i].getTaskId()) {
+                objectTask = taskArray[i];
+                break;
+            }
+        }
+        if (taskCheckbox.checked) {
+            linkedTask.style.textDecoration = "line-through";
+            objectTask.setTaskState(true);
+            return;
+        }
+
+        linkedTask.style.textDecoration = "none";
+        objectTask.setTaskState(false);
+        return;
+    })
 }
 
 window.onload = () => {
@@ -94,9 +198,10 @@ window.onload = () => {
     /**
     * @type HTMLButtonElement
     */
-    const mainButton = document.getElementById("action-button");
+    const addTaskButton = document.getElementById("add-task-button");
+    const myTaskList = document.getElementById("my-list");
 
-    mainButton.addEventListener("click", function (event) {
-        mainButtonClick(taskTitle.value, taskDateEnd.value);
-    });
+    addTaskButton.addEventListener("click", function (event) {
+        addTaskButtonClick(taskTitle.value, taskDateEnd.value, myTaskList);
+    })
 }
